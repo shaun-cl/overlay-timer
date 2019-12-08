@@ -1,11 +1,12 @@
 (function () {
     // The geese mp3 is in the public domain, http://soundbible.com/952-Canadian-Geese.html
     var geeseUrl = chrome.runtime.getURL("geese.mp3");
+    var timerClassName = 'overlayTimer';
 
     function playSound(soundUrl) {
         var newNode = document.createElement("div");
         newNode.id = 'hiddenSoundPlayer';
-        newNode.innerHTML = '<div id="player"> <audio autoplay hidden> <source src="' + soundUrl + '" type="audio/mpeg"> </audio> </div>';
+        newNode.innerHTML = '<audio autoplay hidden> <source src="' + soundUrl + '" type="audio/mpeg"> </audio>';
         var oldNode = document.getElementById(newNode.id);
         if (oldNode)
             oldNode.parentNode.removeChild(oldNode);
@@ -15,10 +16,12 @@
     function makeClockOverlayDiv(appendTo) {
         var node = document.createElement("div");
         appendTo = appendTo || document.body;
-        node.className = 'overlayTimer';
+        node.className = timerClassName;
         node.style.position = 'fixed';
+        node.style.fontSize = '130%';
+        node.style.fontWeight = 'bold';
         node.style.top = '10px'; 
-        node.style.right = '400px'; 
+        node.style.right = '300px'; 
         node.style.borderStyle = 'solid';
         node.style.borderWidth = '2px';
         node.style.borderColor = 'black';
@@ -41,7 +44,7 @@
     }
 
     function deleteChildClocks(parentNode) {
-        Array.from(parentNode.children).filter(n => n.classList.contains("overlayTimer")).forEach(n => n.parentNode.removeChild(n));
+        Array.from(parentNode.children).filter(n => n.classList.contains(timerClassName)).forEach(n => n.parentNode.removeChild(n));
     }
 
     function nodeStillInDom(node) {

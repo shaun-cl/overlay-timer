@@ -1,0 +1,14 @@
+{
+  "name": "Overlay Timer",
+  "version": "0.0.1",
+  "description": "Overlay a timer on a web page",
+  "author": "Shaun Clowes",
+  "manifest_version": 2,
+  "short_name": "Overlay Timer",
+  "permissions": ["activeTab"],
+  "optional_permissions": [],
+  "browser_action": {
+    "default_title": "Overlay Timer",
+    "default_popup": "timer_starter.html"
+  }
+}

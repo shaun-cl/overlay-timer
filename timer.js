@@ -1,7 +1,7 @@
-function makeOverlayDiv() {
+function makeClockOverlayDiv(appendTo) {
     var node = document.createElement("div");
-    var nodeId = 'overlayTimer';
-    node.id = nodeId;
+    appendTo = appendTo || document.body;
+    node.className = 'overlayTimer';
     node.style.position = 'fixed';
     node.style.top = '10px'; 
     node.style.right = '400px'; 
@@ -16,11 +16,17 @@ function makeOverlayDiv() {
 
     // Technically higher than the max signed positive integer but seems to work somehow
     node.style.zIndex = '2147483647';
-    var existingNode = document.getElementById(nodeId);
-    if (existingNode)
-        existingNode.parentNode.removeChild(existingNode);
+
+    // Remove old nodes attached to this parent 
+    deleteChildClocks(appendTo);
+
     //document.body.insertBefore(node, document.body.firstChild);
-    document.body.appendChild(node);
+    appendTo.appendChild(node);
+    return node;
+}
+
+function deleteChildClocks(parentNode) {
+    Array.from(parentNode.children).filter(n => n.classList.contains("overlayTimer")).forEach(n => n.parentNode.removeChild(n));
 }
 
 function getTimeRemaining(endtime) {
@@ -38,8 +44,8 @@ function getTimeRemaining(endtime) {
     };
 }
 
-function initializeClock(id, endtime) {
-    var clock = document.getElementById(id);
+function initializeClock(node, endtime) {
+    var clock = node;
     var daysSpan = clock.querySelector('.days');
     var hoursSpan = clock.querySelector('.hours');
     var minutesSpan = clock.querySelector('.minutes');
@@ -62,19 +68,23 @@ function initializeClock(id, endtime) {
     var timeinterval = setInterval(updateClock, 1000);
 }
 
+var clock = makeClockOverlayDiv();
+var timerLengthMinutes = window.startTimerMinutes || 15;
+var deadline = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
+initializeClock(clock, deadline);
+
+var oldFullScreenElement = null;
+
 document.addEventListener("fullscreenchange", function (event) {
     if (document.fullscreenElement) {
         console.log("Gone full screen", document.fullscreenElement);
-        // fullscreen is activated
+        var newClock = makeClockOverlayDiv(document.fullscreenElement);
+        initializeClock(newClock, deadline);
+        oldFullScreenElement = document.fullscreenElement;
     } else {
-        // fullscreen is cancelled
         console.log("Left full screen", document.fullscreenElement);
+        if (oldFullScreenElement)
+            deleteChildClocks(oldFullScreenElement);
     }
 });
 
-makeOverlayDiv();
-var deadline = new Date(Date.parse(new Date()) + 15 * 60 * 1000);
-initializeClock('overlayTimer', deadline);
-
-var timerDebug = document.getElementById("overlayTimer");
-var timerDebugPreso = document.querySelector(".punch-full-screen-element");

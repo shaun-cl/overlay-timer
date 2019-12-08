@@ -30,6 +30,7 @@
         Array.from(parentNode.children).filter(n => n.classList.contains("overlayTimer")).forEach(n => n.parentNode.removeChild(n));
     }
 
+    // Clock code from https://www.sitepoint.com/build-javascript-countdown-timer-no-dependencies/
     function getTimeRemaining(endtime) {
         var t = Date.parse(endtime) - Date.parse(new Date());
         var seconds = Math.floor((t / 1000) % 60);

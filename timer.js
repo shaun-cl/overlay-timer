@@ -30,7 +30,15 @@
         node.innerHTML = '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
                          '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
                          '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
-                         '<div style="display: inline-block"><span class="seconds"></span></div>';
+                         '<div style="display: inline-block"><span class="seconds"></span></div> ' + 
+                         '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
+
+        node.querySelector('.timerCancel').addEventListener("click", evt => {
+            var clock = evt.target.parentNode;
+            if (clock.dataset.timerId)
+                clearInterval(clock.dataset.timerId);
+            clock.parentNode.removeChild(clock);
+        });
 
         // Technically higher than the max signed positive integer but seems to work somehow
         node.style.zIndex = '2147483647';
@@ -44,7 +52,9 @@
     }
 
     function deleteChildClocks(parentNode) {
-        Array.from(parentNode.children).filter(n => n.classList.contains(timerClassName)).forEach(n => n.parentNode.removeChild(n));
+        Array.from(parentNode.children)
+             .filter(n => n.classList.contains(timerClassName))
+             .forEach(n => { n.parentNode.removeChild(n); if (n.dataset.timerId) clearInterval(n.dataset.timerId); });
     }
 
     function nodeStillInDom(node) {
@@ -108,6 +118,7 @@
 
         updateClock();
         timeinterval = setInterval(updateClock, 1000);
+        clock.dataset.timerId = timeinterval;
     }
 
     var clock = makeClockOverlayDiv();

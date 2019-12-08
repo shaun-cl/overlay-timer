@@ -5,7 +5,7 @@
   "author": "Shaun Clowes",
   "manifest_version": 2,
   "short_name": "Overlay Timer",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "optional_permissions": [],
   "browser_action": {
     "default_title": "Overlay Timer",

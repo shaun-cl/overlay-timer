@@ -24,7 +24,8 @@
         node.style.borderColor = 'black';
         node.style.backgroundColor = 'white';
         node.style.padding = '10px';
-        node.innerHTML = '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
+        node.innerHTML = '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
+                         '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
                          '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
                          '<div style="display: inline-block"><span class="seconds"></span></div>';
 
@@ -43,15 +44,25 @@
         Array.from(parentNode.children).filter(n => n.classList.contains("overlayTimer")).forEach(n => n.parentNode.removeChild(n));
     }
 
+    function nodeStillInDom(node) {
+        var lastChecked;
+        while (node.parentNode) 
+            node = node.parentNode;
+        return node === document;
+    }
+
     // Clock code from https://www.sitepoint.com/build-javascript-countdown-timer-no-dependencies/
     function getTimeRemaining(endtime) {
         var t = Date.parse(endtime) - Date.parse(new Date());
-        var seconds = Math.floor((t / 1000) % 60);
-        var minutes = Math.floor((t / 1000 / 60) % 60);
-        var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
-        var days = Math.floor(t / (1000 * 60 * 60 * 24));
+        var past = t < 0;
+        var s = past ? t * -1 : t;
+        var seconds = Math.floor((s / 1000) % 60);
+        var minutes = Math.floor((s / 1000 / 60) % 60);
+        var hours = Math.floor((s / (1000 * 60 * 60)) % 24);
+        var days = Math.floor(s / (1000 * 60 * 60 * 24));
         return {
             'total': t,
+            'past': past,
             'days': days,
             'hours': hours,
             'minutes': minutes,
@@ -61,17 +72,21 @@
 
     function initializeClock(node, endtime) {
         var clock = node;
+        var pastSpan = clock.querySelector('.past');
         var daysSpan = clock.querySelector('.days');
         var hoursSpan = clock.querySelector('.hours');
         var minutesSpan = clock.querySelector('.minutes');
         var secondsSpan = clock.querySelector('.seconds');
 
+        var timeinterval;
         var lastRemaining;
 
         function updateClock() {
             var t = getTimeRemaining(endtime);
 
+            if (t.past) clock.style.color = 'red';
             if (daysSpan) daysSpan.innerHTML = t.days;
+            if (pastSpan) pastSpan.innerHTML = t.past ? '-' : '';
             hoursSpan.innerHTML = ('0' + t.hours).slice(-2);
             minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
             secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
@@ -81,10 +96,13 @@
                 //clearInterval(timeinterval);
             }
             lastRemaining = t;
+
+            if (!nodeStillInDom(clock))
+                clearInterval(timeinterval);
         }
 
         updateClock();
-        var timeinterval = setInterval(updateClock, 1000);
+        timeinterval = setInterval(updateClock, 1000);
     }
 
     var clock = makeClockOverlayDiv();

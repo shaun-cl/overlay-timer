@@ -1,4 +1,17 @@
 (function () {
+    // The geese mp3 is in the public domain, http://soundbible.com/952-Canadian-Geese.html
+    var geeseUrl = chrome.runtime.getURL("geese.mp3");
+
+    function playSound(soundUrl) {
+        var newNode = document.createElement("div");
+        newNode.id = 'hiddenSoundPlayer';
+        newNode.innerHTML = '<div id="player"> <audio autoplay hidden> <source src="' + soundUrl + '" type="audio/mpeg"> </audio> </div>';
+        var oldNode = document.getElementById(newNode.id);
+        if (oldNode)
+            oldNode.parentNode.removeChild(oldNode);
+        document.body.appendChild(newNode);
+    }
+
     function makeClockOverlayDiv(appendTo) {
         var node = document.createElement("div");
         appendTo = appendTo || document.body;
@@ -53,6 +66,8 @@
         var minutesSpan = clock.querySelector('.minutes');
         var secondsSpan = clock.querySelector('.seconds');
 
+        var lastRemaining;
+
         function updateClock() {
             var t = getTimeRemaining(endtime);
 
@@ -61,9 +76,11 @@
             minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
             secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
 
-            if (t.total <= 0) {
-              clearInterval(timeinterval);
+            if (t.total <= 0 && lastRemaining.total >= 0) {
+                playSound(geeseUrl);
+                //clearInterval(timeinterval);
             }
+            lastRemaining = t;
         }
 
         updateClock();

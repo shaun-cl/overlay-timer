@@ -94,14 +94,16 @@
             minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
             secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
 
+            if (!nodeStillInDom(clock)) {
+                clearInterval(timeinterval);
+                return;
+            }
+
             if (t.total <= 0 && lastRemaining.total >= 0) {
                 playSound(geeseUrl);
                 //clearInterval(timeinterval);
             }
             lastRemaining = t;
-
-            if (!nodeStillInDom(clock))
-                clearInterval(timeinterval);
         }
 
         updateClock();
@@ -118,13 +120,15 @@
     document.addEventListener("fullscreenchange", function (event) {
         if (document.fullscreenElement) {
             console.log("Gone full screen", document.fullscreenElement);
-            var newClock = makeClockOverlayDiv(document.fullscreenElement);
-            initializeClock(newClock, deadline);
+            // Move the clock in to the full screen element
+            if (nodeStillInDom(clock)) {
+                clock.parentNode.removeChild(clock);
+                document.fullscreenElement.appendChild(clock);
+            }
             oldFullScreenElement = document.fullscreenElement;
         } else {
             console.log("Left full screen", document.fullscreenElement);
-            if (oldFullScreenElement)
-                deleteChildClocks(oldFullScreenElement);
+            document.body.appendChild(clock);                
         }
     });
 })();

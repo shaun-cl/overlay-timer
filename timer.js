@@ -13,7 +13,7 @@
     document.body.appendChild(newNode);
   }
 
-  function makeElementDraggable(draggableElement) {
+  function makeElementDraggable(draggableElement, onDrag) {
     draggableElement.addEventListener("mousedown", e => {
       var startX = e.clientX, startY = e.clientY;
 
@@ -29,6 +29,8 @@
       }
 
       function mouseUpListener() {
+        if (onDrag)
+          onDrag(parseInt(draggableElement.style.left), parseInt(draggableElement.style.top));
         document.removeEventListener("mousemove", mouseMoveListener);
         document.removeEventListener("mouseup", mouseUpListener);
       }
@@ -39,15 +41,15 @@
     });
   }
 
-  function makeClockOverlayDiv(appendTo) {
+  function makeClockOverlayDiv(appendTo, x, y, onDrag) {
     var node = document.createElement("div");
     appendTo = appendTo || document.body;
     node.className = timerClassName;
     node.style.position = 'fixed';
     node.style.fontSize = '130%';
     node.style.fontWeight = 'bold';
-    node.style.top = '10px'; 
-    node.style.left = '800px'; 
+    node.style.left = x + 'px'; 
+    node.style.top = y + 'px'; 
     node.style.borderStyle = 'solid';
     node.style.borderWidth = '2px';
     node.style.borderColor = 'black';
@@ -74,7 +76,7 @@
 
     //document.body.insertBefore(node, document.body.firstChild);
     appendTo.appendChild(node);
-    makeElementDraggable(node);
+    makeElementDraggable(node, onDrag);
     return node;
   }
 
@@ -148,13 +150,7 @@
     clock.dataset.timerId = timeinterval;
   }
 
-  var clock = makeClockOverlayDiv();
-  var timerLengthMinutes = window.startTimerMinutes || 15;
-  var deadline = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
-  initializeClock(clock, deadline);
-
   var oldFullScreenElement = null;
-
   document.addEventListener("fullscreenchange", function (event) {
     if (document.fullscreenElement) {
       console.log("Gone full screen", document.fullscreenElement);
@@ -168,6 +164,20 @@
       console.log("Left full screen", document.fullscreenElement);
       document.body.appendChild(clock);                
     }
+  });
+
+  chrome.storage.local.get(['lastX', 'lastY'], results => {
+    // Default timer length is 15 minutes, but normally the chrome extension
+    // will send this to us as the startTimerMinutes window variable
+    var timerLengthMinutes = window.startTimerMinutes || 15;
+    var deadline = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
+
+    var x = results.lastX === undefined ? 800 : results.lastX;
+    var y = results.lastY === undefined ? 10 : results.lastY;
+
+    var clockDiv = makeClockOverlayDiv(document.body, x, y,
+                                       (x,y) => { chrome.storage.local.set({'lastX': x, 'lastY': y}) });
+    initializeClock(clockDiv, deadline);
   });
 })();
 

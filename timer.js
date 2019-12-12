@@ -55,18 +55,14 @@
     node.style.borderColor = 'black';
     node.style.backgroundColor = 'white';
     node.style.padding = '10px';
-    node.innerHTML = '<div style="display: inline-block; width: 7em"><div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
+    node.innerHTML = '<div style="display: inline-block; width: 6.5em">' + 
+            '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
             '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
             '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
-            '<div style="display: inline-block"><span class="seconds"></span></div></div> ' + 
+            '<div style="display: inline-block"><span class="seconds"></span></div>' + 
+            '</div> ' + 
+            '<div style="display: inline-block" class="timerRepeat">&#128257;</div>' + 
             '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
-
-    node.querySelector('.timerCancel').addEventListener("click", evt => {
-      var clock = evt.target.parentNode;
-      if (clock.dataset.timerId)
-        clearInterval(clock.dataset.timerId);
-      clock.parentNode.removeChild(clock);
-    });
 
     // Technically higher than the max signed positive integer but seems to work somehow
     node.style.zIndex = '2147483647';
@@ -112,19 +108,37 @@
     };
   }
 
-  function initializeClock(node, endtime) {
+  function initializeClock(node, timerLengthMinutes) {
     var clock = node;
     var pastSpan = clock.querySelector('.past');
     var daysSpan = clock.querySelector('.days');
     var hoursSpan = clock.querySelector('.hours');
     var minutesSpan = clock.querySelector('.minutes');
     var secondsSpan = clock.querySelector('.seconds');
+    var endtime = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
 
     var timeinterval;
     var lastRemaining;
 
+    function resetEndTime() {
+      node.dataset.endtime = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
+    }
+
+    resetEndTime();
+
+    node.querySelector('.timerCancel').addEventListener("click", evt => {
+      var clock = evt.target.parentNode;
+      if (clock.dataset.timerId)
+        clearInterval(clock.dataset.timerId);
+      clock.parentNode.removeChild(clock);
+    });
+
+    node.querySelector('.timerRepeat').addEventListener("click", evt => {
+      resetEndTime();
+    });
+
     function updateClock() {
-      var t = getTimeRemaining(endtime);
+      var t = getTimeRemaining(node.dataset.endtime);
 
       if (t.past) clock.style.color = 'red';
       if (daysSpan) daysSpan.innerHTML = t.days;
@@ -135,12 +149,12 @@
 
       if (!nodeStillInDom(clock)) {
         clearInterval(timeinterval);
+        delete clock.dataset.timerId;
         return;
       }
 
       if (t.total <= 0 && lastRemaining.total >= 0) {
         playSound(geeseUrl);
-        //clearInterval(timeinterval);
       }
       lastRemaining = t;
     }
@@ -150,34 +164,43 @@
     clock.dataset.timerId = timeinterval;
   }
 
-  var oldFullScreenElement = null;
-  document.addEventListener("fullscreenchange", function (event) {
-    if (document.fullscreenElement) {
-      console.log("Gone full screen", document.fullscreenElement);
-      // Move the clock in to the full screen element
-      if (nodeStillInDom(clock)) {
-        clock.parentNode.removeChild(clock);
-        document.fullscreenElement.appendChild(clock);
+  function keepElementOnFullScreen(el) {
+    var oldFullScreenElement = null;
+    var moveEl = el;
+
+    function keepOnScreen(event) {
+      if (document.fullscreenElement) {
+        console.log("Gone full screen", document.fullscreenElement);
+        // Move the element in to the full screen element
+        if (nodeStillInDom(moveEl)) {
+          moveEl.parentNode.removeChild(moveEl);
+          document.fullscreenElement.appendChild(moveEl);
+        }
+        oldFullScreenElement = document.fullscreenElement;
+      } else {
+        console.log("Left full screen", document.fullscreenElement);
+        document.body.appendChild(moveEl);                
       }
-      oldFullScreenElement = document.fullscreenElement;
-    } else {
-      console.log("Left full screen", document.fullscreenElement);
-      document.body.appendChild(clock);                
-    }
-  });
+    } 
+
+    if (keepElementOnFullScreen.oldHandler)
+      document.removeEventListener("fullscreenchange", keepElementOnFullScreen.oldHandler);
+    keepElementOnFullScreen.oldHandler = keepOnScreen;
+    document.addEventListener("fullscreenchange", keepOnScreen);
+  }
 
   chrome.storage.local.get(['lastX', 'lastY'], results => {
     // Default timer length is 15 minutes, but normally the chrome extension
     // will send this to us as the startTimerMinutes window variable
     var timerLengthMinutes = window.startTimerMinutes || 15;
-    var deadline = new Date(Date.parse(new Date()) + timerLengthMinutes * 60 * 1000);
 
     var x = results.lastX === undefined ? 800 : results.lastX;
     var y = results.lastY === undefined ? 10 : results.lastY;
 
     var clockDiv = makeClockOverlayDiv(document.body, x, y,
                                        (x,y) => { chrome.storage.local.set({'lastX': x, 'lastY': y}) });
-    initializeClock(clockDiv, deadline);
+    keepElementOnFullScreen(clockDiv);
+    initializeClock(clockDiv, timerLengthMinutes);
   });
 })();
 

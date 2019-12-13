@@ -1,4 +1,5 @@
 (function () {
+  console.log("Timer loaded");
   // The geese mp3 is in the public domain, http://soundbible.com/952-Canadian-Geese.html
   var geeseUrl = chrome.runtime.getURL("geese.mp3");
   var timerClassName = 'overlayTimer';
@@ -189,18 +190,29 @@
     document.addEventListener("fullscreenchange", keepOnScreen);
   }
 
-  chrome.storage.local.get(['lastX', 'lastY'], results => {
-    // Default timer length is 15 minutes, but normally the chrome extension
-    // will send this to us as the startTimerMinutes window variable
-    var timerLengthMinutes = window.startTimerMinutes || 15;
+  function startTimer(startTimerMinutes) {
+    chrome.storage.local.get(['lastX', 'lastY'], results => {
+      var timerLengthMinutes = startTimerMinutes || 15;
 
-    var x = results.lastX === undefined ? 800 : results.lastX;
-    var y = results.lastY === undefined ? 10 : results.lastY;
+      var x = results.lastX === undefined ? 800 : results.lastX;
+      var y = results.lastY === undefined ? 10 : results.lastY;
 
-    var clockDiv = makeClockOverlayDiv(document.body, x, y,
-                                       (x,y) => { chrome.storage.local.set({'lastX': x, 'lastY': y}) });
-    keepElementOnFullScreen(clockDiv);
-    initializeClock(clockDiv, timerLengthMinutes);
+      var clockDiv = makeClockOverlayDiv(document.body, x, y,
+                                         (x,y) => { chrome.storage.local.set({'lastX': x, 'lastY': y}) });
+      keepElementOnFullScreen(clockDiv);
+      initializeClock(clockDiv, timerLengthMinutes);
+    });
+  }
+
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log("Message received", request);
+    if (request.command == 'ping') 
+      sendResponse({'message': 'pong'});
+    else if (request.command == 'start') {
+      console.log("Starting timer");
+      startTimer(request.length);
+      sendResponse({'message': 'started'});
+    }
   });
 })();
 

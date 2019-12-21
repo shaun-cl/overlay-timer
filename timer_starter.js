@@ -8,7 +8,7 @@
 
     function getTimerLen() {
         var timerMinsElement = document.getElementById("timerMins");
-        return timerMinsElement ? parseInt(timerMinsElement.value) : defaultTimerLen;
+        return timerMinsElement ? parseFloat(timerMinsElement.value) : defaultTimerLen;
     }
 
     function injectAndStartTimer() {

@@ -6,7 +6,7 @@
   "manifest_version": 2,
   "short_name": "Overlay Timer",
   "permissions": ["activeTab", "storage"],
-  "web_accessible_resources": [ "geese.mp3" ],
+  "web_accessible_resources": [ "audio/*" ],
   "optional_permissions": [],
   "browser_action": {
     "default_title": "Overlay Timer",

@@ -1,17 +1,39 @@
-(function () {
+(function (global) {
   console.log("Timer loaded");
-  // The geese mp3 is in the public domain, http://soundbible.com/952-Canadian-Geese.html
-  var geeseUrl = chrome.runtime.getURL("geese.mp3");
+  var sounds = ['audio/geese.mp3', 'audio/scream.mp3', 'audio/panthersnarl.mp3', 'audio/firetruckhorn.mp3'];
   var timerClassName = 'overlayTimer';
 
-  function playSound(soundUrl) {
-    var newNode = document.createElement("div");
-    newNode.id = 'hiddenSoundPlayer';
-    newNode.innerHTML = '<audio autoplay hidden> <source src="' + soundUrl + '" type="audio/mpeg"> </audio>';
-    var oldNode = document.getElementById(newNode.id);
+  function oneTimeListener(event, element, handler) {
+    function callHandler(e) {
+      element.removeEventListener(event, callHandler); 
+      return handler(e);
+    }
+    return element.addEventListener(event, callHandler);
+  }
+
+  function playSound() {
+    var soundUrl = chrome.runtime.getURL(sounds[Math.floor(Math.random()*sounds.length)]);
+    var minPlayFor = 2;
+
+    var sound      = document.createElement('audio');
+    sound.id       = 'hiddenSoundPlayer';
+    sound.src      = soundUrl;
+    sound.type     = 'audio/mpeg';
+
+    var oldNode = document.getElementById(sound.id);
     if (oldNode)
       oldNode.parentNode.removeChild(oldNode);
-    document.body.appendChild(newNode);
+    document.body.appendChild(sound);
+
+    oneTimeListener('canplaythrough', sound, evt => { 
+      var repeatTimes = Math.ceil(Math.max(0, minPlayFor / sound.duration - 1));
+      console.log('Audio loaded', evt.target, sound.duration, repeatTimes);
+      sound.addEventListener('ended', evt => {
+        if (repeatTimes-- <= 0) return;
+        sound.play();
+      });
+      sound.play();
+    });
   }
 
   function makeElementDraggable(draggableElement, onDrag) {
@@ -141,7 +163,10 @@
     function updateClock() {
       var t = getTimeRemaining(node.dataset.endtime);
 
-      if (t.past) clock.style.color = 'red';
+      if (t.past) 
+        clock.style.color = 'red';
+      else
+        clock.style.color = "";
       if (daysSpan) daysSpan.innerHTML = t.days;
       if (pastSpan) pastSpan.innerHTML = t.past ? '-' : '';
       hoursSpan.innerHTML = ('0' + t.hours).slice(-2);
@@ -154,8 +179,9 @@
         return;
       }
 
-      if (t.total <= 0 && lastRemaining.total >= 0) {
-        playSound(geeseUrl);
+      if (t.total <= 0 && lastRemaining.total > 0) {
+        console.log('Timer expired', t.total, lastRemaining.total, clock.dataset.timerId);
+        playSound();
       }
       lastRemaining = t;
     }
@@ -214,5 +240,6 @@
       sendResponse({'message': 'started'});
     }
   });
-})();
 
+  global.playSound = playSound;
+})(window);

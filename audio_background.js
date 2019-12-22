@@ -39,10 +39,12 @@
     });
   }
 
+  var audioFilesPromise = getAudioFiles();
+
   chrome.runtime.onMessage.addListener((message, sender, callback) => {
     console.log("Received message", message);
     if (message.command == 'getAudioFiles') {
-      getAudioFiles().then(files => callback(files))
+      audioFilesPromise.then(files => callback(files))
       return true;
     }
   });

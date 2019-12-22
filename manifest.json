@@ -12,6 +12,9 @@
     "default_title": "Overlay Timer",
     "default_popup": "timer_starter.html"
   },
+  "background": {
+    "scripts": ["audio_background.js"]
+  },
   "commands": {
     "_execute_browser_action": {
       "suggested_key": {

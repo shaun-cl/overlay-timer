@@ -1,41 +1,6 @@
 (function (global) {
   console.log("Timer loaded");
-  var sounds = ['audio/geese.mp3', 'audio/scream.mp3', 'audio/panther_snarl.mp3', 'audio/fire_truck_horn.mp3',
-                'audio/digital_alarm_clock.mp3', 'audio/church_bells.mp3'];
   var timerClassName = 'overlayTimer';
-
-  function oneTimeListener(event, element, handler) {
-    function callHandler(e) {
-      element.removeEventListener(event, callHandler); 
-      return handler(e);
-    }
-    return element.addEventListener(event, callHandler);
-  }
-
-  function playSound() {
-    var soundUrl = chrome.runtime.getURL(sounds[Math.floor(Math.random()*sounds.length)]);
-    var minPlayFor = 2;
-
-    var sound      = document.createElement('audio');
-    sound.id       = 'hiddenSoundPlayer';
-    sound.src      = soundUrl;
-    sound.type     = 'audio/mpeg';
-
-    var oldNode = document.getElementById(sound.id);
-    if (oldNode)
-      oldNode.parentNode.removeChild(oldNode);
-    document.body.appendChild(sound);
-
-    oneTimeListener('canplaythrough', sound, evt => { 
-      var repeatTimes = Math.ceil(Math.max(0, minPlayFor / sound.duration - 1));
-      console.log('Audio loaded', evt.target, sound.duration, repeatTimes);
-      sound.addEventListener('ended', evt => {
-        if (repeatTimes-- <= 0) return;
-        sound.play();
-      });
-      sound.play();
-    });
-  }
 
   function makeElementDraggable(draggableElement, onDrag) {
     draggableElement.addEventListener("mousedown", e => {
@@ -182,7 +147,7 @@
 
       if (t.total <= 0 && lastRemaining.total > 0) {
         console.log('Timer expired', t.total, lastRemaining.total, clock.dataset.timerId);
-        playSound();
+        playRandomSound();
       }
       lastRemaining = t;
     }
@@ -242,5 +207,4 @@
     }
   });
 
-  global.playSound = playSound;
 })(window);

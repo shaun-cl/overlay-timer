@@ -1,6 +1,7 @@
 (function (global) {
   console.log("Timer loaded");
-  var sounds = ['audio/geese.mp3', 'audio/scream.mp3', 'audio/panthersnarl.mp3', 'audio/firetruckhorn.mp3'];
+  var sounds = ['audio/geese.mp3', 'audio/scream.mp3', 'audio/panther_snarl.mp3', 'audio/fire_truck_horn.mp3',
+                'audio/digital_alarm_clock.mp3', 'audio/church_bells.mp3'];
   var timerClassName = 'overlayTimer';
 
   function oneTimeListener(event, element, handler) {

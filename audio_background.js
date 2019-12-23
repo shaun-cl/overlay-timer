@@ -17,7 +17,7 @@
       var entries = [];
 
       function getAppendEntries() {
-        dirReader.readEntries(function(results) {
+        dirReader.readEntries(results => {
           if (results.length) {
             entries = entries.concat(results.filter(f => !f.name.startsWith(".")));
             getAppendEntries();
@@ -34,7 +34,7 @@
     return new Promise((resolve, reject) => {
       getPackageDirectory().then(dir => getDirectoryEntry(dir, 'audio'))
                            .then(getEntries)
-                           .then(entries => entries.map(f => 'audio/' + f.name))
+                           .then(e => e.map(f => 'audio/' + f.name))
                            .then(e => resolve(e));
     });
   }

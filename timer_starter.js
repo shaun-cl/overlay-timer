@@ -47,7 +47,7 @@
 
   function startTimer(tabId, timerLen) {
     chrome.tabs.sendMessage(tabId, {command: 'start', 'length': timerLen});
-    chrome.storage.local.set({lastTimerLen: timerLen}, function () { window.close() });
+    chrome.storage.local.set({lastTimerLen: timerLen}, () => window.close());
   }
 
   document.getElementById("startTimer").addEventListener("click", evt => {

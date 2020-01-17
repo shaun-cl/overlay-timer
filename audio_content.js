@@ -10,7 +10,10 @@
   }
 
   function playRandomSound() {
-    return pickRandomSound().then(soundUrl => playSound(soundUrl));
+    return pickRandomSound().then(function (soundUrl) { 
+      playSound(soundUrl);
+      return soundUrl;
+    });
   }
 
   var soundsPromise = getSounds();

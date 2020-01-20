@@ -4,15 +4,11 @@
   var playful_sub_dir = 'playful';
 
   function getPackageDirectory() {
-    return new Promise(function(resolve, reject) {
-      chrome.runtime.getPackageDirectoryEntry(dir => resolve(dir));
-    });
+    return new Promise(resolve => chrome.runtime.getPackageDirectoryEntry(resolve));
   }
 
   function getDirectoryEntry(dir, name) {
-    return new Promise(function(resolve, reject) {
-      dir.getDirectory(name, {}, d => resolve(d));
-    });
+    return new Promise(resolve => dir.getDirectory(name, {}, resolve));
   }
 
   function getEntries(dir) {
@@ -35,12 +31,9 @@
   }
 
   function getAudioFiles() {
-    return new Promise((resolve, reject) => {
-      getPackageDirectory().then(dir => getDirectoryEntry(dir, audio_dir + '/' + serious_sub_dir))
-                           .then(getEntries)
-                           .then(e => e.map(f => audio_dir + '/' + serious_sub_dir + '/' + f.name))
-                           .then(e => resolve(e));
-    });
+      return getPackageDirectory().then(dir => getDirectoryEntry(dir, audio_dir + '/' + serious_sub_dir))
+                                  .then(getEntries)
+                                  .then(e => e.map(f => audio_dir + '/' + serious_sub_dir + '/' + f.name));
   }
 
   var audioFilesPromise = getAudioFiles();

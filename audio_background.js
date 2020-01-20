@@ -1,4 +1,8 @@
 (function (global) {
+  var audio_dir = 'audio';
+  var serious_sub_dir = 'serious';
+  var playful_sub_dir = 'playful';
+
   function getPackageDirectory() {
     return new Promise(function(resolve, reject) {
       chrome.runtime.getPackageDirectoryEntry(dir => resolve(dir));
@@ -32,9 +36,9 @@
 
   function getAudioFiles() {
     return new Promise((resolve, reject) => {
-      getPackageDirectory().then(dir => getDirectoryEntry(dir, 'audio'))
+      getPackageDirectory().then(dir => getDirectoryEntry(dir, audio_dir + '/' + serious_sub_dir))
                            .then(getEntries)
-                           .then(e => e.map(f => 'audio/' + f.name))
+                           .then(e => e.map(f => audio_dir + '/' + serious_sub_dir + '/' + f.name))
                            .then(e => resolve(e));
     });
   }

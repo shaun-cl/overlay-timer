@@ -37,20 +37,22 @@
     sound.src      = soundUrl;
     sound.type     = 'audio/mpeg';
 
-    var oldNode = document.getElementById(sound.id);
-    if (oldNode)
-      oldNode.parentNode.removeChild(oldNode);
-    document.body.appendChild(sound);
-
     oneTimeListener('canplaythrough', sound, evt => { 
       var repeatTimes = Math.ceil(Math.max(0, minPlayFor / sound.duration - 1));
       console.log('Audio loaded', evt.target, sound.duration, repeatTimes);
       sound.addEventListener('ended', evt => {
+        console.log('Sound ended');
         if (repeatTimes-- <= 0) return;
         sound.play();
       });
+      console.log('Playing sound');
       sound.play();
     });
+
+    var oldNode = document.getElementById(sound.id);
+    if (oldNode)
+      oldNode.parentNode.removeChild(oldNode);
+    document.body.appendChild(sound);
   }
 
   console.log("Audio content loaded");

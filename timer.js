@@ -2,34 +2,6 @@
   console.log("Timer loaded");
   var timerClassName = 'overlayTimer';
 
-  function makeElementDraggable(draggableElement, onDrag) {
-    draggableElement.addEventListener("mousedown", e => {
-      var startX = e.clientX, startY = e.clientY;
-
-      function mouseMoveListener(e) {
-        var offsetX = startX - e.clientX;
-        var offsetY = startY - e.clientY;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        // set the element's new position:
-        draggableElement.style.left = (draggableElement.offsetLeft - offsetX) + "px";
-        draggableElement.style.top = (draggableElement.offsetTop - offsetY) + "px";
-      }
-
-      function mouseUpListener() {
-        if (onDrag)
-          onDrag(parseInt(draggableElement.style.left), parseInt(draggableElement.style.top));
-        document.removeEventListener("mousemove", mouseMoveListener);
-        document.removeEventListener("mouseup", mouseUpListener);
-      }
-
-      document.addEventListener("mousemove", mouseMoveListener);
-      document.addEventListener("mouseup", mouseUpListener);
-      e.preventDefault();
-    });
-  }
-
   function makeClockOverlayDiv(appendTo, x, y, onDrag) {
     var node = document.createElement("div");
     appendTo = appendTo || document.body;
@@ -61,7 +33,7 @@
 
     //document.body.insertBefore(node, document.body.firstChild);
     appendTo.appendChild(node);
-    makeElementDraggable(node, onDrag);
+    Elements.makeElementDraggable(node, onDrag);
     return node;
   }
 
@@ -69,13 +41,6 @@
     Array.from(parentNode.children)
       .filter(n => n.classList.contains(timerClassName))
       .forEach(n => { n.parentNode.removeChild(n); if (n.dataset.timerId) clearInterval(n.dataset.timerId); });
-  }
-
-  function nodeStillInDom(node) {
-    var lastChecked;
-    while (node.parentNode) 
-      node = node.parentNode;
-    return node === document;
   }
 
   // Clock code from https://www.sitepoint.com/build-javascript-countdown-timer-no-dependencies/
@@ -139,7 +104,7 @@
       minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
       secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
 
-      if (!nodeStillInDom(clock)) {
+      if (!Elements.nodeStillInDom(clock)) {
         clearInterval(timeinterval);
         delete clock.dataset.timerId;
         return;
@@ -157,41 +122,17 @@
     clock.dataset.timerId = timeinterval;
   }
 
-  function keepElementOnFullScreen(el) {
-    var oldFullScreenElement = null;
-    var moveEl = el;
-
-    function keepOnScreen(event) {
-      if (document.fullscreenElement) {
-        console.log("Gone full screen", document.fullscreenElement);
-        // Move the element in to the full screen element
-        if (nodeStillInDom(moveEl)) {
-          moveEl.parentNode.removeChild(moveEl);
-          document.fullscreenElement.appendChild(moveEl);
-        }
-        oldFullScreenElement = document.fullscreenElement;
-      } else {
-        console.log("Left full screen", document.fullscreenElement);
-        document.body.appendChild(moveEl);                
-      }
-    } 
-
-    if (keepElementOnFullScreen.oldHandler)
-      document.removeEventListener("fullscreenchange", keepElementOnFullScreen.oldHandler);
-    keepElementOnFullScreen.oldHandler = keepOnScreen;
-    document.addEventListener("fullscreenchange", keepOnScreen);
-  }
-
   function startTimer(startTimerMinutes) {
     chrome.storage.local.get(['lastX', 'lastY'], results => {
+      console.log("Start timer", startTimerMinutes, results);
       var timerLengthMinutes = startTimerMinutes || 15;
 
-      var x = results.lastX === undefined ? 800 : results.lastX;
-      var y = results.lastY === undefined ? 10 : results.lastY;
+      var x = Math.min(results.lastX === undefined ? 800 : results.lastX, window.innerWidth - 50);
+      var y = Math.min(results.lastY === undefined ? 10 : results.lastY, window.innerHeight - 50);
 
       var clockDiv = makeClockOverlayDiv(document.body, x, y,
-                                         (x,y) => { chrome.storage.local.set({'lastX': x, 'lastY': y}) });
-      keepElementOnFullScreen(clockDiv);
+                                         (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y}));
+      Elements.keepElementOnFullScreen(clockDiv);
       initializeClock(clockDiv, timerLengthMinutes);
     });
   }

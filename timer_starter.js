@@ -36,7 +36,7 @@
       chrome.tabs.sendMessage(tabId, {command: "ping"}, resp => { 
         if (chrome.runtime.lastError)  {
           console.log('Injecting');
-          injectScripts(["audio_content.js", "timer.js"]).then(result => startTimer(tabId, timerLen));
+          injectScripts(["elements.js", "audio_content.js", "timer.js"]).then(result => startTimer(tabId, timerLen));
           return;
         }
         console.log('No need to inject', resp);

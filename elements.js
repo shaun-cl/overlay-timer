@@ -1,8 +1,7 @@
-(function (global) {
-  console.log("Loading elements.js");
-  global.Elements = global.Elements || {};
+; var Elements = (function (Elements) {
+  console.log("Loading elements.js", window.Elements, Elements);
 
-  global.Elements.makeElementDraggable = function (draggableElement, onDrag) {
+  Elements.makeElementDraggable = function (draggableElement, onDrag) {
     draggableElement.addEventListener("mousedown", e => {
       var startX = e.clientX, startY = e.clientY;
 
@@ -30,7 +29,7 @@
     });
   }
 
-  global.Elements.nodeStillInDom = function (node) {
+  Elements.nodeStillInDom = function (node) {
     var lastChecked;
     while (node.parentNode) 
       node = node.parentNode;
@@ -62,7 +61,7 @@
     document.addEventListener("fullscreenchange", keepOnScreen);
   } 
 
-  global.Elements.keepElementOnFullScreen = keepElementOnFullScreen;
+  Elements.keepElementOnFullScreen = keepElementOnFullScreen;
 
-  console.log(global, global.Elements);
-})(window);
+  return Elements
+})(Elements || {});

@@ -3,38 +3,37 @@
   var timerClassName = 'overlayTimer';
 
   function makeClockOverlayDiv(appendTo, x, y, onDrag) {
-    var node = document.createElement("div");
     appendTo = appendTo || document.body;
-    node.className = timerClassName;
-    node.style.position = 'fixed';
-    node.style.fontSize = '130%';
-    node.style.fontWeight = 'bold';
-    node.style.left = x + 'px'; 
-    node.style.top = y + 'px'; 
-    node.style.borderStyle = 'solid';
-    node.style.borderWidth = '2px';
-    node.style.borderColor = 'black';
-    node.style.backgroundColor = 'white';
-    node.style.padding = '10px';
-    node.innerHTML = '<div style="display: inline-block; width: 6.5em">' + 
-            '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
-            '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
-            '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
-            '<div style="display: inline-block"><span class="seconds"></span></div>' + 
-            '</div> ' + 
-            '<div style="display: inline-block" class="timerRepeat">&#128257;</div>' + 
-            '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
 
+    var hostNode = document.createElement("div");
+    clockDivHtml  = '<div class="' + timerClassName + '" ' +
+                          'style="position: fixed; left: ' + x + 'px; top: ' + y + 'px; z-index: 2147483647 ' +
+                                 'font-size: 130%; font-weight: bold; ' + 
+                                 'border-style: solid; border-width: 2px; border-color: black; ' + 
+                                 'background-color: white; padding: 10px">';
+    clockDivHtml += '<div style="display: inline-block; width: 6.5em">' + 
+                    '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
+                    '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
+                    '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
+                    '<div style="display: inline-block"><span class="seconds"></span></div>' + 
+                    '</div> ' + 
+                    '<div style="display: inline-block" class="timerRepeat">&#128257;</div>' + 
+                    '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
+    clockDivHtml += '</div>'
+
+    hostNode.innerHTML = clockDivHtml;
+    var clockNode = hostNode.firstChild;
     // Technically higher than the max signed positive integer but seems to work somehow
-    node.style.zIndex = '2147483647';
+    clockNode.style.zIndex = '2147483647';
 
     // Remove old nodes attached to this parent 
     deleteChildClocks(appendTo);
 
     //document.body.insertBefore(node, document.body.firstChild);
-    appendTo.appendChild(node);
-    Elements.makeElementDraggable(node, onDrag);
-    return node;
+    appendTo.appendChild(clockNode);
+    console.log("Timer node", clockNode);
+    Elements.makeElementDraggable(clockNode, onDrag);
+    return clockNode;
   }
 
   function deleteChildClocks(parentNode) {

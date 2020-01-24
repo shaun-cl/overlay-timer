@@ -1,15 +1,13 @@
-;(function (global) {
-  global.Files = global.Files || {};
-
-  global.Files.getPackageDirectory = function () {
+;var Files = (function (Files) {
+  Files.getPackageDirectory = function () {
     return new Promise(resolve => chrome.runtime.getPackageDirectoryEntry(resolve));
   };
 
-  global.Files.getDirectoryEntry = function (dir, name) {
+  Files.getDirectoryEntry = function (dir, name) {
     return new Promise(resolve => dir.getDirectory(name, {}, resolve));
   };
 
-  global.Files.getEntries = function (dir) {
+  Files.getEntries = function (dir) {
     return new Promise(resolve => {
       var dirReader = dir.createReader();
       var entries = [];
@@ -27,4 +25,6 @@
       getAppendEntries();
     });
   };
-})(window);
+
+  return Files
+})(Files || {});

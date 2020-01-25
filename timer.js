@@ -17,6 +17,7 @@
                       '<div style="display: inline-block"><span class="seconds"></span></div>' + 
                       '</div> ' + 
                       '<div style="display: inline-block" class="timerRepeat">&#128257;</div>' + 
+                      '<div style="display: inline-block" class="timerPause">&#9208;</div>' + 
                       '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
       clockDivHtml += '</div>'
 
@@ -46,7 +47,7 @@
         .forEach(n => { n.parentNode.removeChild(n); if (n.dataset.timerId) clearInterval(n.dataset.timerId); });
     }
 
-    function initializeClockTimer(clockDivObj, onExpired) {
+    function initializeClockTimer(clockDivObj, onExpired, triggerSecondsBoundary, onSecondsBoundary) {
       var node = clockDivObj.node;
 
       var timerId;
@@ -61,6 +62,9 @@
           return;
         }
 
+        if (node.dataset.timerPauseRemaining) 
+          return;
+
         var t = clockDivObj.updateClock();
 
         if (t.total <= 0 && lastRemaining.total > 0) {
@@ -68,6 +72,13 @@
           if (onExpired)
             onExpired();
         }
+
+        if (triggerSecondsBoundary) {
+          if ((t.totalSecs % triggerSecondsBoundary) == 0 && 
+              (lastRemaining && lastRemaining.totalSecs % triggerSecondsBoundary) != 0)
+            onSecondsBoundary(t);
+        }
+
         lastRemaining = t;
       }
 
@@ -98,7 +109,21 @@
         this.resetEndTime();
       });
 
-      initializeClockTimer(this, function () { playRandomSound() });
+      node.querySelector('.timerPause').addEventListener("click", evt => {
+        this.pauseToggle();
+      });
+
+      initializeClockTimer(this, function () { Audio.playRandomSound(4) }, 30, function () { Audio.playBeep() });
+    }
+
+    Class.prototype.pauseToggle = function () {
+      if (this.node.dataset.timerPauseRemaining) {
+        this.node.dataset.endtime = new Date(Date.parse(new Date()) + parseInt(this.node.dataset.timerPauseRemaining));
+        delete this.node.dataset.timerPauseRemaining;
+      } else { 
+        var t = this.getTimeRemaining();
+        this.node.dataset.timerPauseRemaining = t.total;
+      }
     }
 
     Class.prototype.resetEndTime = function () {
@@ -137,6 +162,7 @@
       var hours = Math.floor((s / (1000 * 60 * 60)) % 24);
       var days = Math.floor(s / (1000 * 60 * 60 * 24));
       return {
+        'totalSecs': Math.floor(t / 1000),
         'total': t,
         'past': past,
         'days': days,

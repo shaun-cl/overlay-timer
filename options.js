@@ -1,5 +1,6 @@
 ;var Options = (function (Options) {
-  var defaults = {usePlayfulSounds: false, minPlayForSecs: 4};
+  var defaults = {usePlayfulSounds: false, minPlayForSecs: 4,
+                  usePeriodicBeeps: true, periodicBeepSeconds: 30};
 
   function getSettings() {
     return new Promise(resolve => chrome.storage.local.get(Object.keys(defaults), 

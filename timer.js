@@ -180,7 +180,6 @@
   }
 
   function startTimer(startTimerMinutes) {
-    console.log("hey");
     Promise.all([getLastXY(), Options.getSettings()]).then(([lastXY, options]) => {
       lastXY = Object.assign({lastX: 800, lastY: 10}, lastXY);
       console.log("Start timer", startTimerMinutes, lastXY, options);
@@ -195,7 +194,8 @@
       var clockDiv = new ClockDiv(document.body,  
                                   {minutes: timerLengthMinutes, 
                                    onExpiry: () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds),
-                                   triggerSecondsBoundary: 30, onSecondsBoundary: () => Audio.playBeep(),
+                                   triggerSecondsBoundary: options.usePeriodicBeeps && options.periodicBeepSeconds,
+                                   onSecondsBoundary: () => Audio.playBeep(),
                                    x: x, y: y, onDrag: saveOnDrag  });
     });
   }

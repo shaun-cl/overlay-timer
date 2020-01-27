@@ -8,6 +8,7 @@
   "permissions": ["activeTab", "storage"],
   "web_accessible_resources": [ "audio/*" ],
   "optional_permissions": [],
+  "options_page": "options.html",
   "browser_action": {
     "default_title": "Overlay Timer",
     "default_popup": "timer_starter.html"

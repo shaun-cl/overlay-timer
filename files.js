@@ -26,5 +26,12 @@
     });
   };
 
+  Files.getFileNamesFromPackageDirectory = function (baseDir) {
+    return Files.getPackageDirectory()
+             .then(dir => Files.getDirectoryEntry(dir, baseDir))
+             .then(Files.getEntries)
+             .then(e => e.map(f => baseDir + '/' + f.name));
+  };
+
   return Files
 })(Files || {});

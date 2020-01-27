@@ -113,7 +113,7 @@
         this.pauseToggle();
       });
 
-      initializeClockTimer(this, function () { Audio.playRandomSound(4) }, 30, function () { Audio.playBeep() });
+      initializeClockTimer(this, options.onExpiry, options.triggerSecondsBoundary, options.onSecondsBoundary);
     }
 
     Class.prototype.pauseToggle = function () {
@@ -175,19 +175,28 @@
     return Class;
   })();
 
+  function getLastXY() {
+    return new Promise(resolve => chrome.storage.local.get(['lastX', 'lastY'], resolve));
+  }
+
   function startTimer(startTimerMinutes) {
-    chrome.storage.local.get(['lastX', 'lastY'], results => {
-      console.log("Start timer", startTimerMinutes, results);
+    console.log("hey");
+    Promise.all([getLastXY(), Options.getSettings()]).then(([lastXY, options]) => {
+      lastXY = Object.assign({lastX: 800, lastY: 10}, lastXY);
+      console.log("Start timer", startTimerMinutes, lastXY, options);
 
       var timerLengthMinutes = startTimerMinutes || 15;
 
-      var x = Math.min(results.lastX === undefined ? 800 : results.lastX, window.innerWidth - 50);
-      var y = Math.min(results.lastY === undefined ? 10 : results.lastY, window.innerHeight - 50);
+      var x = Math.min(lastXY.lastX, window.innerWidth - 50);
+      var y = Math.min(lastXY.lastY, window.innerHeight - 50);
+
+      saveOnDrag = (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y});
 
       var clockDiv = new ClockDiv(document.body,  
                                   {minutes: timerLengthMinutes, 
-                                   x: x, y: y, 
-                                   onDrag: (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y}) });
+                                   onExpiry: () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds),
+                                   triggerSecondsBoundary: 30, onSecondsBoundary: () => Audio.playBeep(),
+                                   x: x, y: y, onDrag: saveOnDrag  });
     });
   }
 
@@ -203,4 +212,5 @@
   });
 
   global.ClockDiv = ClockDiv;
+  global.startTimer = startTimer;
 })(window);

@@ -1,5 +1,9 @@
 (function () {
   document.getElementById("playSound").addEventListener('click', evt => {
-    playSound();
+    Audio.playRandomSound(2, false).then(function (lastSoundUrl) {
+      var lastSoundUrlDiv = document.getElementById('lastSoundUrl');
+      if (lastSoundUrlDiv)
+        lastSoundUrlDiv.innerText = lastSoundUrl;
+    });
   });
 })();

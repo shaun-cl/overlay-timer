@@ -22,15 +22,15 @@
             .then(sounds => chrome.runtime.getURL(sounds[Math.floor(Math.random()*sounds.length)]));
   }
 
-  Audio.playRandomSound = function (minPlayForSecs, includePlayful) {
+  Audio.playRandomSound = function (minPlayForSecs, includePlayful, volumePcnt) {
     return Audio.pickRandomSound(includePlayful).then(function (soundUrl) { 
-      Audio.playSound(soundUrl, minPlayForSecs);
+      Audio.playSound(soundUrl, minPlayForSecs, volumePcnt);
       return soundUrl;
     });
   }
 
-  Audio.playBeep = function () {
-    Audio.playSound(beepUrl);
+  Audio.playBeep = function (volumePcnt) {
+    Audio.playSound(beepUrl, undefined, volumePcnt);
   }
 
   var seriousSoundsPromise = getSeriousSounds();
@@ -38,14 +38,17 @@
 
   console.log("Loading audio content");
 
-  Audio.playSound = function (soundUrl, minPlayForSecs) {
+  Audio.playSound = function (soundUrl, minPlayForSecs, volumePcnt) {
     console.log("Playing sound", soundUrl);
     minPlayForSecs = minPlayForSecs || 0;
+    volumePcnt = volumePcnt == undefined ? 1.0 : volumePcnt / 100.0;
+
 
     var sound      = document.createElement('audio');
     sound.id       = 'hiddenSoundPlayer';
     sound.src      = soundUrl;
     sound.type     = 'audio/mpeg';
+    sound.volume   = volumePcnt;
 
     oneTimeListener('canplaythrough', sound, evt => { 
       var repeatTimes = Math.ceil(Math.max(0, minPlayForSecs / sound.duration - 1));

@@ -179,7 +179,7 @@
     return new Promise(resolve => chrome.storage.local.get(['lastX', 'lastY'], resolve));
   }
 
-  function startTimer(startTimerMinutes) {
+  function startTimer(startTimerMinutes, volumePcnt) {
     Promise.all([getLastXY(), Options.getSettings()]).then(([lastXY, options]) => {
       lastXY = Object.assign({lastX: 800, lastY: 10}, lastXY);
       console.log("Start timer", startTimerMinutes, lastXY, options);
@@ -193,9 +193,9 @@
 
       var clockDiv = new ClockDiv(document.body,  
                                   {minutes: timerLengthMinutes, 
-                                   onExpiry: () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds),
+                                   onExpiry: () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, volumePcnt),
                                    triggerSecondsBoundary: options.usePeriodicBeeps && options.periodicBeepSeconds,
-                                   onSecondsBoundary: () => Audio.playBeep(),
+                                   onSecondsBoundary: () => Audio.playBeep(volumePcnt),
                                    x: x, y: y, onDrag: saveOnDrag  });
     });
   }
@@ -205,8 +205,8 @@
     if (request.command == 'ping') 
       sendResponse({'message': 'pong'});
     else if (request.command == 'start') {
-      console.log("Starting timer");
-      startTimer(request.length);
+      console.log("Starting timer", request);
+      startTimer(request.length, request.volumePcnt);
       sendResponse({'message': 'started'});
     }
   });

@@ -35,6 +35,20 @@
     });
   }
 
+  function pingOrInject(tabId, scripts) {
+    return new Promise(accept => {
+      chrome.tabs.sendMessage(tabId, {command: "ping"}, resp => { 
+        if (chrome.runtime.lastError)  {
+          console.log('Injecting');
+          injectScripts(scripts).then(accept);
+        } else {
+          console.log('No need to inject', resp);
+          accept();
+        }
+      });
+    });
+  }
+
   function injectAndStartTimer() {
     var timerLen = getTimerLen();
     var volumePcnt = getVolumePcnt();
@@ -42,15 +56,8 @@
     
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
       tabId = tabs[0].id;
-      chrome.tabs.sendMessage(tabId, {command: "ping"}, resp => { 
-        if (chrome.runtime.lastError)  {
-          console.log('Injecting');
-          injectScripts(["options.js", "elements.js", "audio_content.js", "timer.js"]).then(result => startTimer(tabId, timerLen, volumePcnt));
-          return;
-        }
-        console.log('No need to inject', resp);
-        startTimer(tabId, timerLen, volumePcnt);
-      });
+      pingOrInject(tabId, ["js/options.js", "js/elements.js", "js/audio_content.js", "js/timer.js"])
+        .then(resp => startTimer(tabId, timerLen, volumePcnt));
     });
   }
 
@@ -58,7 +65,7 @@
     var command = {command: 'start', 'length': timerLen, 'volumePcnt': volumePcnt};
     console.log("Command to start timer", command);
     chrome.tabs.sendMessage(tabId, command);
-    chrome.storage.local.set({lastTimerLen: timerLen, lastVolumePcnt: volumePcnt}, () => window.close());
+    chrome.storage.local.set({lastTimerLen: timerLen, lastVolumePcnt: volumePcnt}, () => false && window.close());
   }
 
   document.getElementById("startTimer").addEventListener("click", evt => {

@@ -8,13 +8,13 @@
   "permissions": ["activeTab", "storage"],
   "web_accessible_resources": [ "audio/*" ],
   "optional_permissions": [],
-  "options_page": "options.html",
+  "options_page": "/html/options.html",
   "browser_action": {
     "default_title": "Overlay Timer",
-    "default_popup": "timer_starter.html"
+    "default_popup": "/html/timer_starter.html"
   },
   "background": {
-    "scripts": ["files.js", "audio_background.js"]
+    "scripts": ["/js/files.js", "/js/audio_background.js"]
   },
   "commands": {
     "_execute_browser_action": {

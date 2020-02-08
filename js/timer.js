@@ -5,21 +5,31 @@
   var ClockDiv = (function () {
     function makeNode(className, x, y) {
       var hostNode = document.createElement("div");
-      clockDivHtml  = '<div class="' + className + '" ' +
-                            'style="position: fixed; left: ' + x + 'px; top: ' + y + 'px; z-index: 2147483647 ' +
-                                   'font-size: 130%; font-weight: bold; ' + 
-                                   'border-style: solid; border-width: 2px; border-color: black; ' + 
-                                   'background-color: white; padding: 10px">';
-      clockDivHtml += '<div style="display: inline-block; width: 6.5em">' + 
-                      '<div style="display: inline-block; width: 0.5em"><span class="past"></span></div>' +
-                      '<div style="display: inline-block"><span class="hours"></span></div> : ' + 
-                      '<div style="display: inline-block"><span class="minutes"></span></div> : ' + 
-                      '<div style="display: inline-block"><span class="seconds"></span></div>' + 
-                      '</div> ' + 
-                      '<div style="display: inline-block" class="timerRepeat">&#128257;</div>' + 
-                      '<div style="display: inline-block" class="timerPause">&#9208;</div>' + 
-                      '<div style="display: inline-block" class="timerCancel">&#10060;</div>';
-      clockDivHtml += '</div>'
+      var clockDivHtml = mustache(`<div class="{{className}}" 
+                                        style="position: fixed; left: {{x}}px;top: {{y}}px; z-index: 2147483647
+                                               font-size: 130%; font-weight: bold; 
+                                               border-style: solid; border-width: 2px; border-color: black;
+                                               background-color: white; padding: 10px">
+                                     <div class="countDown" style="display: inline-block; width: 6.7em">
+                                       <div style="display: inline-block; width: 0.5em"><span class="past"></span></div>
+                                       <div style="display: inline-block"><span class="hours"></span></div> :
+                                       <div style="display: inline-block"><span class="minutes"></span></div> :
+                                       <div style="display: inline-block"><span class="seconds"></span></div>
+                                     </div>
+                                     <div class="controls" style="display: inline-block;">
+                                       <div style="display: inline-block" class="timerRepeat">&#128257;</div>DELSPACE 
+                                       <div style="display: inline-block" class="timerPause">&#9208;</div>DELSPACE 
+                                       <div style="display: inline-block" class="timerCancel">&#10060;</div>DELSPACE 
+                                       <div style="display: inline-block" data-expando-target="timerExtraControls" class="timerExpandoControls expando">
+                                         <div style="display: inline-block" class="expand">&#x1F53C;</div>DELSPACE 
+                                         <div style="display: inline-block" class="contract">&#x1F53D;</div>DELSPACE 
+                                       </div>
+                                     </div>
+                                     <div style="clear: right" class="timerExtraControls expandoTarget">
+                                       <div style="display: inline-block" class="timerBell">&#x1F514;</div>DELSPACE
+                                       <input type="range" id="timerVolume" value="100" min="0" max="100">
+                                     </div>
+                                   </div>`, {className: className, x: x, y: y}).replace(/DELSPACE\s*/g, '');
 
       hostNode.innerHTML = clockDivHtml;
       var clockNode = hostNode.firstChild;
@@ -87,33 +97,54 @@
       node.dataset.timerId = timerId;
     }
 
-    function Class(parentNode, options) {
-      options = options || {};
-
+    function Class(parentNode, options = {}) {
       var className = options.className || 'overlayTimer';
 
       var node = makeNode(className, options.x, options.y);
       this.node = node;
-      this.timerLengthMinutes = options.minutes;
+      this.timerLengthMinutes = options.timerLengthMinutes;
+
+      node.querySelectorAll(".expando").forEach(target => {
+        // Hide expando target 
+        var expandoTarget = node.querySelector("." + target.dataset.expandoTarget);
+        var contractButton = target.querySelector(".contract");
+        var expandButton = target.querySelector(".expand");
+
+        function setOpenState(bool) {
+          expandoTarget.style.display = bool ? "" : "none";
+          contractButton.style.display = bool ? "" : "none";
+          expandButton.style.display = bool ? "none" : "";
+        }
+
+        setOpenState(false);
+
+        target.querySelector(".contract").addEventListener("click", () => setOpenState(false));
+        target.querySelector(".expand").addEventListener("click", () => setOpenState(true));
+      });
 
       insertNode(node, parentNode, this.ClassName, options.onDrag);
 
       node.querySelector('.timerCancel').addEventListener("click", evt => {
-        var clock = evt.target.parentNode;
+        var clock = evt.target.parentNode.parentNode;
         if (clock.dataset.timerId)
           clearInterval(clock.dataset.timerId);
         clock.parentNode.removeChild(clock);
       });
 
-      node.querySelector('.timerRepeat').addEventListener("click", evt => {
-        this.resetEndTime();
-      });
+      // Prevent the volume slider dragging the timer
+      node.querySelector('#timerVolume').addEventListener("mousedown", evt => evt.stopPropagation());
+      node.querySelector('#timerVolume').value = options.volumePcnt || 100;
 
-      node.querySelector('.timerPause').addEventListener("click", evt => {
-        this.pauseToggle();
-      });
+      var getVolumePcnt = () => node.querySelector('#timerVolume').value;
 
-      initializeClockTimer(this, options.onExpiry, options.triggerSecondsBoundary, options.onSecondsBoundary);
+      node.querySelector('.timerBell').addEventListener("click", () => Audio.playBeep(getVolumePcnt()));
+      node.querySelector('.timerRepeat').addEventListener("click", evt => this.resetEndTime());
+      node.querySelector('.timerPause').addEventListener("click", evt => this.pauseToggle());
+
+      var onExpiry = () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, getVolumePcnt());
+      var onSecondsBoundary = () => Audio.playBeep(getVolumePcnt());
+
+      initializeClockTimer(this, onExpiry, options.triggerSecondsBoundary, onSecondsBoundary);
     }
 
     Class.prototype.pauseToggle = function () {
@@ -179,24 +210,23 @@
     return new Promise(resolve => chrome.storage.local.get(['lastX', 'lastY'], resolve));
   }
 
-  function startTimer(startTimerMinutes, volumePcnt) {
+  function startTimer(timerLengthMinutes = 15, volumePcnt) {
     Promise.all([getLastXY(), Options.getSettings()]).then(([lastXY, options]) => {
       lastXY = Object.assign({lastX: 800, lastY: 10}, lastXY);
-      console.log("Start timer", startTimerMinutes, lastXY, options);
+      console.log("Start timer", timerLengthMinutes, lastXY, options);
 
-      var timerLengthMinutes = startTimerMinutes || 15;
+      var x = Math.min(lastXY.lastX, window.innerWidth - 200);
+      var y = Math.min(lastXY.lastY, 10);
 
-      var x = Math.min(lastXY.lastX, window.innerWidth - 50);
-      var y = Math.min(lastXY.lastY, window.innerHeight - 50);
-
-      saveOnDrag = (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y});
+      var savePositionOnDrag = (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y});
 
       var clockDiv = new ClockDiv(document.body,  
-                                  {minutes: timerLengthMinutes, 
-                                   onExpiry: () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, volumePcnt),
+                                  {timerLengthMinutes: timerLengthMinutes, 
+                                   usePlayfulSounds: options.usePlayfulSounds,
+                                   minPlayForSecs: options.minPlayForSecs,
+                                   volumePcnt: volumePcnt,
                                    triggerSecondsBoundary: options.usePeriodicBeeps && options.periodicBeepSeconds,
-                                   onSecondsBoundary: () => Audio.playBeep(volumePcnt),
-                                   x: x, y: y, onDrag: saveOnDrag  });
+                                   x: x, y: y, onDrag: savePositionOnDrag  });
     });
   }
 

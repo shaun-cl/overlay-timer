@@ -56,7 +56,7 @@
     
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
       tabId = tabs[0].id;
-      pingOrInject(tabId, ["js/options.js", "js/elements.js", "js/audio_content.js", "js/timer.js"])
+      pingOrInject(tabId, ["js/mustache.js", "js/options.js", "js/elements.js", "js/audio_content.js", "js/timer.js"])
         .then(resp => startTimer(tabId, timerLen, volumePcnt));
     });
   }
@@ -65,7 +65,7 @@
     var command = {command: 'start', 'length': timerLen, 'volumePcnt': volumePcnt};
     console.log("Command to start timer", command);
     chrome.tabs.sendMessage(tabId, command);
-    chrome.storage.local.set({lastTimerLen: timerLen, lastVolumePcnt: volumePcnt}, () => false && window.close());
+    chrome.storage.local.set({lastTimerLen: timerLen, lastVolumePcnt: volumePcnt}, () => window.close());
   }
 
   document.getElementById("startTimer").addEventListener("click", evt => {

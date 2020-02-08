@@ -7,4 +7,7 @@
         lastSoundUrlDiv.innerText = lastSoundUrl;
     });
   });
+
+  if (startTimer) 
+    startTimer(20);
 })();

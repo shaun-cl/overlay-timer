@@ -38,7 +38,7 @@
 
   console.log("Loading audio content");
 
-  Audio.playSound = function (soundUrl, minPlayForSecs, volumePcnt) {
+  Audio.playSound = function (soundUrl, minPlayForSecs, volumePcnt, autoPlay = true) {
     console.log("Playing sound", soundUrl);
     minPlayForSecs = minPlayForSecs || 0;
     volumePcnt = volumePcnt == undefined ? 1.0 : volumePcnt / 100.0;
@@ -62,12 +62,13 @@
     var gainNode = audioCtx.createGain();
     gainNode.gain.value = 1.0;
 
-    audioElem.addEventListener("play", function() {
+    audioElem.addEventListener("play", function (evt) {
+      console.log("Play", evt);
       src.connect(gainNode);
       gainNode.connect(audioCtx.destination);
     }, true);
 
-    audioElem.addEventListener("pause", function() {
+    audioElem.addEventListener("pause", function (evt) {
       // disconnect the nodes on pause, otherwise all nodes always run
       src.disconnect(gainNode);
       gainNode.disconnect(audioCtx.destination);
@@ -117,7 +118,11 @@
         return;
       sound.play();
     });
-    setTimeout(() => { console.log("Playing"); sound.play() }, 0);
+
+    if (autoPlay)
+      setTimeout(() => { console.log("Playing"); sound.play() }, 0);
+
+    return sound;
   }
 
   console.log("Audio content loaded");

@@ -29,12 +29,14 @@
     });
   }
 
-  Elements.nodeStillInDom = function (node) {
+  function nodeStillInDom(node) {
     var lastChecked;
     while (node.parentNode) 
       node = node.parentNode;
     return node === document;
-  }
+  } 
+
+  Elements.nodeStillInDom = nodeStillInDom;
 
   function keepElementOnFullScreen(el) {
     var oldFullScreenElement = null;

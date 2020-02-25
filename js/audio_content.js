@@ -17,6 +17,9 @@
     return new Promise(resolve => chrome.runtime.sendMessage({command: 'getSeriousAudioFiles'}, resolve));
   }
 
+  var seriousSoundsPromise = getSeriousSounds();
+  var allSoundsPromise = getAllSounds();
+
   Audio.getAllSounds = getAllSounds; 
 
   Audio.pickRandomSound = function (includePlayful) {
@@ -34,9 +37,6 @@
   Audio.playBeep = function (volumePcnt) {
     Audio.playSound(beepUrl, undefined, volumePcnt);
   }
-
-  var seriousSoundsPromise = getSeriousSounds();
-  var allSoundsPromise = getAllSounds();
 
   console.log("Loading audio content");
 

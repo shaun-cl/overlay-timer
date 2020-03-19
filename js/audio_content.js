@@ -1,14 +1,6 @@
 ; var Audio = (function (Audio) {
   var beepUrl = chrome.runtime.getURL("audio/beep.mp3");
 
-  function oneTimeListener(event, element, handler) {
-    function callHandler(e) {
-      element.removeEventListener(event, callHandler); 
-      return handler(e);
-    }
-    return element.addEventListener(event, callHandler);
-  }
-
   function getAllSounds() {
     return new Promise(resolve => chrome.runtime.sendMessage({command: 'getAllAudioFiles'}, resolve));
   }

@@ -97,56 +97,6 @@
       node.dataset.timerId = timerId;
     }
 
-    function Class(parentNode, options = {}) {
-      var className = options.className || 'overlayTimer';
-
-      var node = makeNode(className, options.x, options.y);
-      this.node = node;
-      this.timerLengthMinutes = options.timerLengthMinutes;
-
-      node.querySelectorAll(".expando").forEach(target => {
-        // Hide expando target 
-        var expandoTarget = node.querySelector("." + target.dataset.expandoTarget);
-        var contractButton = target.querySelector(".contract");
-        var expandButton = target.querySelector(".expand");
-
-        function setOpenState(bool) {
-          expandoTarget.style.display = bool ? "" : "none";
-          contractButton.style.display = bool ? "" : "none";
-          expandButton.style.display = bool ? "none" : "";
-        }
-
-        setOpenState(false);
-
-        target.querySelector(".contract").addEventListener("click", () => setOpenState(false));
-        target.querySelector(".expand").addEventListener("click", () => setOpenState(true));
-      });
-
-      insertNode(node, parentNode, this.ClassName, options.onDrag);
-
-      node.querySelector('.timerCancel').addEventListener("click", evt => {
-        var clock = evt.target.parentNode.parentNode;
-        if (clock.dataset.timerId)
-          clearInterval(clock.dataset.timerId);
-        clock.parentNode.removeChild(clock);
-      });
-
-      // Prevent the volume slider dragging the timer
-      node.querySelector('#timerVolume').addEventListener("mousedown", evt => evt.stopPropagation());
-      node.querySelector('#timerVolume').value = options.volumePcnt || 100;
-
-      var getVolumePcnt = () => node.querySelector('#timerVolume').value;
-
-      node.querySelector('.timerBell').addEventListener("click", () => Audio.playBeep(getVolumePcnt()));
-      node.querySelector('.timerRepeat').addEventListener("click", evt => this.resetEndTime());
-      node.querySelector('.timerPause').addEventListener("click", evt => this.pauseToggle());
-
-      var onExpiry = () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, getVolumePcnt());
-      var onSecondsBoundary = () => Audio.playBeep(getVolumePcnt());
-
-      initializeClockTimer(this, onExpiry, options.triggerSecondsBoundary, onSecondsBoundary);
-    }
-
     Class.prototype.pauseToggle = function () {
       if (this.node.dataset.timerPauseRemaining) {
         this.node.dataset.endtime = new Date(Date.parse(new Date()) + parseInt(this.node.dataset.timerPauseRemaining));
@@ -203,6 +153,61 @@
       };
     }
 
+    /* Constructor */
+    function Class(parentNode, options = {}) {
+      var className = options.className || 'overlayTimer';
+
+      var node = makeNode(className, options.x, options.y);
+      this.node = node;
+      this.timerLengthMinutes = options.timerLengthMinutes;
+
+      node.querySelectorAll(".expando").forEach(target => {
+        // Hide expando target 
+        var expandoTarget = node.querySelector("." + target.dataset.expandoTarget);
+        var contractButton = target.querySelector(".contract");
+        var expandButton = target.querySelector(".expand");
+
+        function setOpenState(bool) {
+          expandoTarget.style.display = bool ? "" : "none";
+          contractButton.style.display = bool ? "" : "none";
+          expandButton.style.display = bool ? "none" : "";
+        }
+
+        setOpenState(false);
+
+        target.querySelector(".contract").addEventListener("click", () => setOpenState(false));
+        target.querySelector(".expand").addEventListener("click", () => setOpenState(true));
+      });
+
+      insertNode(node, parentNode, this.ClassName, options.onDrag);
+
+      node.querySelector('.timerCancel').addEventListener("click", evt => {
+        var clock = evt.target.parentNode.parentNode;
+        if (clock.dataset.timerId)
+          clearInterval(clock.dataset.timerId);
+        clock.parentNode.removeChild(clock);
+      });
+
+      // Prevent the volume slider dragging the timer
+      node.querySelector('#timerVolume').addEventListener("mousedown", evt => evt.stopPropagation());
+      node.querySelector('#timerVolume').value = options.volumePcnt || 100;
+
+      // Call out for volume change if desired
+      if (options.onVolumeChange) 
+        node.querySelector('#timerVolume').addEventListener("change", options.onVolumeChange);
+
+      var getVolumePcnt = () => node.querySelector('#timerVolume').value;
+
+      node.querySelector('.timerBell').addEventListener("click", () => Audio.playBeep(getVolumePcnt()));
+      node.querySelector('.timerRepeat').addEventListener("click", evt => this.resetEndTime());
+      node.querySelector('.timerPause').addEventListener("click", evt => this.pauseToggle());
+
+      var onExpiry = () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, getVolumePcnt());
+      var onSecondsBoundary = () => Audio.playBeep(getVolumePcnt());
+
+      initializeClockTimer(this, onExpiry, options.triggerSecondsBoundary, onSecondsBoundary);
+    }
+
     return Class;
   })();
 
@@ -219,6 +224,7 @@
       var y = Math.min(lastXY.lastY, 10);
 
       var savePositionOnDrag = (x,y) => chrome.storage.local.set({'lastX': x, 'lastY': y});
+      var saveVolumeOnChange = evt => chrome.storage.local.set({'lastVolumePcnt': evt.target.value});
 
       var clockDiv = new ClockDiv(document.body,  
                                   {timerLengthMinutes: timerLengthMinutes, 
@@ -226,7 +232,9 @@
                                    minPlayForSecs: options.minPlayForSecs,
                                    volumePcnt: volumePcnt,
                                    triggerSecondsBoundary: options.usePeriodicBeeps && options.periodicBeepSeconds,
-                                   x: x, y: y, onDrag: savePositionOnDrag  });
+                                   x: x, y: y, 
+                                   onVolumeChange: saveVolumeOnChange,
+                                   onDrag: savePositionOnDrag  });
     });
   }
 

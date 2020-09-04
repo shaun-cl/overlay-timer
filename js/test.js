@@ -7,11 +7,11 @@
   });
 
   var allSoundsDiv = document.getElementById("listAllSounds");
-  Audio.getAllSounds().then(soundUrls => soundUrls.forEach(soundUrl => {
+  Audio.getAllSounds().then(sounds => sounds.forEach(sound => {
     var newDiv = document.createElement("div");
-    newDiv.innerHTML = "Sound: " + soundUrl + " <button class='original'>Play</button><button class='normalized'>Play Normalized</button>";
-    newDiv.querySelector("button.original").addEventListener("click", () => Audio.playSound(chrome.runtime.getURL(soundUrl), undefined, undefined, true, false));
-    newDiv.querySelector("button.normalized").addEventListener("click", () => Audio.playSound(chrome.runtime.getURL(soundUrl), undefined, undefined, true, true));
+    newDiv.innerHTML = `Sound: ${sound.name}, Description: ${sound.desc} <button class='original'>Play</button><button class='normalized'>Play Normalized</button>`;
+    newDiv.querySelector("button.original").addEventListener("click", () => Audio.playSound(chrome.runtime.getURL(sound.name), undefined, undefined, true, false));
+    newDiv.querySelector("button.normalized").addEventListener("click", () => Audio.playSound(chrome.runtime.getURL(sound.name), undefined, undefined, true, true));
     allSoundsDiv.appendChild(newDiv);
   }));
 

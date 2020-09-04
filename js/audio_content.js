@@ -1,13 +1,8 @@
 ; var Audio = (function (Audio) {
   var beepUrl = chrome.runtime.getURL("audio/beep.mp3");
 
-  function getAllSounds() {
-    return new Promise(resolve => chrome.runtime.sendMessage({command: 'getAllAudioFiles'}, resolve));
-  }
-
-  function getSeriousSounds() {
-    return new Promise(resolve => chrome.runtime.sendMessage({command: 'getSeriousAudioFiles'}, resolve));
-  }
+  const getAllSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getAllAudioFiles'}, resolve));
+  const getSeriousSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getSeriousAudioFiles'}, resolve));
 
   var seriousSoundsPromise = getSeriousSounds();
   var allSoundsPromise = getAllSounds();

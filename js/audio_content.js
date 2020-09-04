@@ -11,12 +11,12 @@
 
   Audio.pickRandomSound = function (includePlayful) {
     return (includePlayful ? allSoundsPromise : seriousSoundsPromise)
-            .then(sounds => chrome.runtime.getURL(sounds[Math.floor(Math.random()*sounds.length)]));
+            .then(sounds => sounds[Math.floor(Math.random()*sounds.length)]);
   }
 
   Audio.playRandomSound = function (minPlayForSecs, includePlayful, volumePcnt) {
-    return Audio.pickRandomSound(includePlayful).then(function (soundUrl) { 
-      Audio.playSound(soundUrl, minPlayForSecs, volumePcnt);
+    return Audio.pickRandomSound(includePlayful).then(function (sound) { 
+      Audio.playSound(chrome.runtime.getURL(sound.name), minPlayForSecs, volumePcnt);
       return soundUrl;
     });
   }

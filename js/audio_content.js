@@ -1,13 +1,16 @@
-; var Audio = (function (Audio) {
+;var Audio = (function (Audio) {
   var beepUrl = chrome.runtime.getURL("audio/beep.mp3");
 
   const getAllSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getAllAudioFiles'}, resolve));
+  const getPlayfulSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getPlayfulAudioFiles'}, resolve));
   const getSeriousSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getSeriousAudioFiles'}, resolve));
 
   var seriousSoundsPromise = getSeriousSounds();
   var allSoundsPromise = getAllSounds();
 
   Audio.getAllSounds = getAllSounds; 
+  Audio.getPlayfulSounds = getPlayfulSounds; 
+  Audio.getSeriousSounds = getSeriousSounds; 
 
   Audio.pickRandomSound = function (includePlayful) {
     return (includePlayful ? allSoundsPromise : seriousSoundsPromise)
@@ -21,9 +24,7 @@
     });
   }
 
-  Audio.playBeep = function (volumePcnt) {
-    Audio.playSound(beepUrl, undefined, volumePcnt);
-  }
+  Audio.playBeep = (volumePcnt) => Audio.playSound(beepUrl, undefined, volumePcnt);
 
   console.log("Loading audio content");
 

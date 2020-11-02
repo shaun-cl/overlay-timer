@@ -29,27 +29,59 @@
     chrome.storage.local.set(saveOptions, result => console.log(result));
   }
 
+  async function saveNewFile(fileHandle) {
+    console.log(`Saving ${fileHandle}`);
+    var localDir = await navigator.storage.getDirectory();
+    var newFileHandle = await localDir.getFileHandle(fileHandle.name, { create: true });
+    var writable = await newFileHandle.createWritable();
+    var file = await fileHandle.getFile();
+    console.log(localDir, newFileHandle, fileHandle, writable);
+    writable.write(file);
+    writable.close();
+    
+  }
+
+  const sendAsyncMessage = (message) => new Promise(accept => chrome.runtime.sendMessage(message, accept));
+
+  async function handleUpload() {
+    var [fileHandle] = await window.showOpenFilePicker();
+    saveNewFile(fileHandle);
+    refreshSounds();
+  }
+
+  async function refreshSounds() {
+    await sendAsyncMessage({command: 'refreshAudioFilesList'});
+    loadSounds();
+  }
+
   function loadSounds() {
-    const makeSoundElem = (s) => `${s.name} - ${s.desc} <button class='playSound' data-url='${s.name}'>&#x25B6;</button><br>`;
+    const makeSoundElem = (s) => `${s.extensionRelativeFileName} - ${s.description} <button class='playSound' data-url='${s.url}'>&#x25B6;</button> ${s.type == 'custom' ? `<button class='deleteSound' data-name='${s.extensionRelativeFileName}'>Delete</button>` : ``}<br>`;
     const makeSoundElems = (sounds, el) => el.innerHTML = sounds.map(makeSoundElem).join("");
     Audio.getPlayfulSounds().then(sounds => makeSoundElems(sounds, document.getElementById("playfulSounds")));
     Audio.getSeriousSounds().then(sounds => makeSoundElems(sounds, document.getElementById("seriousSounds")));
-    document.body.addEventListener('click', evt => {
-      if (evt.target.classList.contains("playSound")) {
-        Audio.playSound(chrome.runtime.getURL(evt.target.dataset.url))
-      }
-    });
+    Audio.getCustomSounds().then(sounds =>  makeSoundElems(sounds, document.getElementById("customSounds")));
   }
 
-  function init() {
+  function initOptionsPage() {
     getSettings().then(fillForm);
     var saveButton = document.getElementById("saveOptions");
     if (saveButton)
       saveButton.addEventListener('click', evt => saveForm());
+    var uploadButton = document.getElementById("uploadFile");
+    if (uploadButton)
+      uploadButton.addEventListener('click', handleUpload);
     loadSounds();
+    document.body.addEventListener('click', evt => {
+      if (evt.target.classList.contains("playSound")) 
+        Audio.playSound(evt.target.dataset.url)
+      else if (evt.target.classList.contains("deleteSound"))
+        chrome.runtime.sendMessage({command: 'deleteCustomAudioFile', name: evt.target.dataset.name}, refreshSounds);
+    });
   }
 
-  init();
+  if (window.location.href.startsWith("chrome-extension://"))
+    initOptionsPage();
+
   Options.getSettings = getSettings;
   return Options;
 })(Options || {});

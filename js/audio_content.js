@@ -4,6 +4,7 @@
   const getAllSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getAllAudioFiles'}, resolve));
   const getPlayfulSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getPlayfulAudioFiles'}, resolve));
   const getSeriousSounds = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getSeriousAudioFiles'}, resolve));
+  const getCustomSounds  = () => new Promise(resolve => chrome.runtime.sendMessage({command: 'getCustomAudioFiles'},  resolve));
 
   var seriousSoundsPromise = getSeriousSounds();
   var allSoundsPromise = getAllSounds();
@@ -11,6 +12,7 @@
   Audio.getAllSounds = getAllSounds; 
   Audio.getPlayfulSounds = getPlayfulSounds; 
   Audio.getSeriousSounds = getSeriousSounds; 
+  Audio.getCustomSounds  = getCustomSounds; 
 
   Audio.pickRandomSound = function (includePlayful) {
     return (includePlayful ? allSoundsPromise : seriousSoundsPromise)
@@ -19,8 +21,8 @@
 
   Audio.playRandomSound = function (minPlayForSecs, includePlayful, volumePcnt) {
     return Audio.pickRandomSound(includePlayful).then(function (sound) { 
-      Audio.playSound(chrome.runtime.getURL(sound.name), minPlayForSecs, volumePcnt);
-      return soundUrl;
+      Audio.playSound(sound.url, minPlayForSecs, volumePcnt);
+      return sound.url;
     });
   }
 

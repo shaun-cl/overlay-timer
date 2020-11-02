@@ -2,23 +2,47 @@
   Files.getPackageDirectory = () => new Promise(resolve => chrome.runtime.getPackageDirectoryEntry(resolve));
   Files.getDirectoryEntry = (dir, name) => new Promise(resolve => dir.getDirectory(name, {}, resolve));
 
-  Files.getEntriesAndDir = function (dir, relativePath = "") {
-    return new Promise(resolve => {
-      var entries = [];
+  Files.getEntriesAndDir = async function (dir, relativePath = "") {
+    var entries = [];
 
-      function getAppendEntries(dirReader) {
-        dirReader.readEntries(results => {
-          if (results.length) {
-            entries = entries.concat(results.filter(f => !f.name.startsWith("."))
-                                            .map(f => { f.relative = relativePath + f.name; return f }));
-            getAppendEntries(dirReader);
-          } else
-            resolve([dir, entries]);
-        });
+    const readDirReader = (dirReader) => new Promise(accept => dirReader.readEntries(accept));
+    const fileEntryGetFile = (fileEntry) => new Promise(accept => fileEntry.file(accept));
+
+    var dirReader = dir.createReader();
+
+    console.log(`getEntriesAndDir: ${dir}`);
+
+    while (1) {
+      var newEntries = await readDirReader(dirReader);
+      if (!newEntries || !newEntries.length)
+        break;
+      console.log(`getEntriesAndDir: newEntries`, newEntries);
+      for (var f of newEntries) {
+        if (f.name.startsWith("."))
+          continue;
+        f = await fileEntryGetFile(f);
+        f.relative = relativePath + f.name;
+        entries.push(f);
       }
+    }
 
-      getAppendEntries(dir.createReader());
-    });
+    console.log(`getEntriesAndDir: dir`, dir);
+    console.log(`getEntriesAndDir: entries`, entries);
+    return([dir, entries]);
+  };
+
+  Files.iterateEntriesAndDir = async function (dir, relativePath = "") {
+    var files = [];
+
+    for await (let [name, handle] of dir.entries()) {
+      var file = await handle.getFile();
+      files.push(file);
+    }
+
+    files = files.map(f => { f.relative = relativePath + f.name; return f });
+    console.log(`iterateEntriesAndDir: dir`, dir);
+    console.log(`iterateEntriesAndDir: files`, files);
+    return [dir, files];
   };
 
   Files.getEntries = (dir, relativePath) => Files.getEntriesAndDir(dir, relativePath).then(([dir, entries]) => entries);

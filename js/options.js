@@ -1,5 +1,6 @@
 ;var Options = (function (Options) {
   var defaults = {usePlayfulSounds: false, minPlayForSecs: 4,
+                  maxPlayForSecs: 4,
                   usePeriodicBeeps: true, periodicBeepSeconds: 30};
 
   const getSettings = () => new Promise(resolve => chrome.storage.local.get(Object.keys(defaults),
@@ -72,9 +73,9 @@
       uploadButton.addEventListener('click', handleUpload);
     loadSounds();
     document.body.addEventListener('click', evt => {
-      if (evt.target.classList.contains("playSound")) 
-        Audio.playSound(evt.target.dataset.url)
-      else if (evt.target.classList.contains("deleteSound"))
+      if (evt.target.classList.contains("playSound")) {
+        getSettings().then(options => Audio.playSound(evt.target.dataset.url, options.minPlayForSecs, options.maxPlayForSecs));
+      } else if (evt.target.classList.contains("deleteSound"))
         chrome.runtime.sendMessage({command: 'deleteCustomAudioFile', name: evt.target.dataset.name}, refreshSounds);
     });
   }

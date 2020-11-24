@@ -202,7 +202,7 @@
       node.querySelector('.timerRepeat').addEventListener("click", evt => this.resetEndTime());
       node.querySelector('.timerPause').addEventListener("click", evt => this.pauseToggle());
 
-      var onExpiry = () => Audio.playRandomSound(options.minPlayForSecs, options.usePlayfulSounds, getVolumePcnt());
+      var onExpiry = () => Audio.playRandomSound(options.minPlayForSecs, options.maxPlayForSecs, options.usePlayfulSounds, getVolumePcnt());
       var onSecondsBoundary = () => Audio.playBeep(getVolumePcnt());
 
       initializeClockTimer(this, onExpiry, options.triggerSecondsBoundary, onSecondsBoundary);
@@ -230,6 +230,7 @@
                                   {timerLengthMinutes: timerLengthMinutes, 
                                    usePlayfulSounds: options.usePlayfulSounds,
                                    minPlayForSecs: options.minPlayForSecs,
+                                   maxPlayForSecs: options.maxPlayForSecs,
                                    volumePcnt: volumePcnt,
                                    triggerSecondsBoundary: options.usePeriodicBeeps && options.periodicBeepSeconds,
                                    x: x, y: y, 

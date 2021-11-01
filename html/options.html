@@ -1,0 +1,26 @@
+<html>
+<title>Overlay Timer Options</title>
+<style>
+.optionBlock { padding: 0.2em }
+input { margin: 0.2em }
+</style>
+<body>
+<h2>Overlay Timer Options</h2>
+<div class="optionBlock"><input class="option" data-option-type="boolean" id="usePlayfulSounds" type="checkbox">Use playful sounds as well as serious ones when timer expires</div>
+<div class="optionBlock"><input class="option" data-option-type="integer" id="minPlayForSecs" type="input" size="4">Minimum length in seconds to play end of timer sound for (will repeat until minimum achieved)</div>
+<div class="optionBlock"><input class="option" data-option-type="integer" id="maxPlayForSecs" type="input" size="4">Maximum length in seconds to play end of timer sound for</div>
+<div class="optionBlock"><input class="option" data-option-type="boolean" id="usePeriodicBeeps" type="checkbox">Play a quiet beep periodically during countdown</div>
+<div class="optionBlock"><input class="option" data-option-type="integer" id="periodicBeepSeconds" type="input" size="4">Seconds between periodic beeps</div>
+<button id="saveOptions">Save</button>
+<h2>Sounds</h2>
+<button id="uploadFile">Upload</button>
+<h3>Custom</h3>
+<div id="customSounds"></div>
+<h3>Playful</h3>
+<div id="playfulSounds"></div>
+<h3>Serious</h3>
+<div id="seriousSounds"></div>
+<script src="/js/audio_content.js"></script>
+<script src="/js/options.js"></script>
+</body>
+</html>
